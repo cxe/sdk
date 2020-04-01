@@ -1,10 +1,9 @@
 # @cxe/sdk
 Dockerized Software Development Kit
 
-## Download and Installation
+## Download and Install
 ```
-mkdir -p ~/.cxe && \
-    wget https://raw.githubusercontent.com/cxe/sdk/master/cli -O ~/.cxe/cli && \
+curl https://raw.githubusercontent.com/cxe/sdk/master/cli --create-dirs -o ~/.cxe/cli && \
     chmod +x ~/.cxe/cli && \
     ~/.cxe/cli --install
 ```

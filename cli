@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Software Development Kit
+# CXE powered Software Development Kit
 
 readonly CXE_NAME="${CXE_NAME:-cxe}"
 readonly CXE_ABBR="$(echo "$CXE_NAME" | tr [:lower:] [:upper:])"
-readonly CXE_VERSION="0.2.0"
+readonly CXE_VERSION="0.2.1"
 readonly CXE_COMMAND="/usr/local/bin/${CXE_NAME}"
 readonly CXE_PROFILE="${HOME:-~}/.${CXE_NAME}/profile"
+readonly CXE_ERROR_CONFLICT=1
+readonly CXE_ERROR_FORBIDDEN=2
 
 # return the current branch name
 function _gitBranch() {
@@ -27,8 +29,8 @@ function _exit() {
     exit $1
 }
 
-if [[ "$CXE_IMAGE" ]]; then
-    PS1="\e[0;34m$CXE_IMAGE \w> \e[m"
+if [[ "$DOCKER_IMAGE" ]]; then
+    PS1="\e[0;34m$DOCKER_IMAGE \w> \e[m"
 
 else
 
@@ -64,43 +66,43 @@ else
         else
             mkdir -p ~/.cxe
 
-            # reuse existing profile for some settings
+            # reuse some settings (if a profile still exists)
             if [[ -f "$CXE_PROFILE" ]]; then
                 source "$CXE_PROFILE"
             fi
 
             # regenerate and save profile
             data=(
-                "export CXE_DIR='$PWD'"
-                "export CXE_DEFAULT_AUTHOR='${CXE_DEFAULT_AUTHOR:-USER}'"
-                'export PATH="$CXE_DIR:$PATH"'
+                "# v$CXE_VERSION $(date '+%Y-%m-%d %H:%M')"
+                "export CXE_DIR='$( cd "$(dirname "$0")" ; pwd -P )'"
+                "export CXE_DEFAULT_AUTHOR='${CXE_DEFAULT_AUTHOR:-"$(whoami)"}'"
+                'export PATH="$PATH:$CXE_DIR"'
             )
-            local IFS=$'\n'
-            echo "${data[*]}" >$CXE_PROFILE
+            local IFS=$'\n'; echo "${data[*]}" >$CXE_PROFILE
 
-            # add to bash-profile if not already there
+            # add to bash-profile (if not already there)
             if ! grep -q "cxe/profile" ~/.bash_profile; then
                 echo "source '$CXE_PROFILE'" >>~/.bash_profile
             fi
 
-            # load the newly generated profile (also modifies PATH)
+            # load the newly generated profile
             source $CXE_PROFILE
 
             # expose command
             if [[ ! -f "$CXE_COMMAND" ]] && [[ ! -L "$CXE_COMMAND" ]]; then
                 ln -s "$CXE_DIR/cli" "$CXE_COMMAND"
             else
-                _exit 1 "'$CXE_COMMAND' already exits. Aborting."
+                _exit $CXE_ERROR_CONFLICT "'$CXE_COMMAND' already exits. Aborting."
             fi
         fi
-        echo "installed $CXE_ABBR $CXE_VERSION: $CXE_COMMAND"
+        echo "sucessfully installed $CXE_ABBR $CXE_VERSION: $CXE_COMMAND"
     }
 
     # uninstall the command
     function --uninstall() {
         [[ -L "$CXE_COMMAND" ]] && unlink "$CXE_COMMAND"
         [[ -f "$CXE_PROFILE" ]] && unlink "$CXE_PROFILE"
-        export PATH="$(echo "${PATH//$CXE_DIR:/}")"
+        export PATH="$(echo "${PATH//:$CXE_DIR/}")" # remove from PATH
         export CXE_DIR=
         hash -r
         echo "uninstalled $CXE_ABBR"
@@ -108,11 +110,11 @@ else
 
     if [ "$1" ]; then
         if [[ "$(type -t -- "$1")" ]]; then
-            [[ "${1:0:1}" == "_" ]] && _exit 2 "restricted command '$1'"
+            [[ "${1:0:1}" == "_" ]] && _exit $CXE_ERROR_FORBIDDEN "restricted command '$1'"
             "$1" "${@:2}"
         else
             docker run --rm -it \
-                -e "CXE_IMAGE=$1" \
+                -e "DOCKER_IMAGE=$1" \
                 -w /app \
                 -v $PWD:/app \
                 -v $CXE_DIR:/cxe \
