@@ -9,10 +9,15 @@ npm i @cxe/sdk -g
 ```
 or
 ```console
+npx @cxe/sdk
+```
+or
+```console
 curl https://raw.githubusercontent.com/cxe/sdk/master/cli --create-dirs -o ~/.cxe/cli && \
     chmod +x ~/.cxe/cli && \
     ~/.cxe/cli --install
 ```
+
 
 ## Getting Started
 ```console
