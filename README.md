@@ -1,9 +1,13 @@
-# @cxe/sdk
-CXE NodeJS SDK
+# CXE NodeJS SDK
 
 Software Development Kit for creating dockerized NodeJS applications and webservices.
 
 ## Download and Install
+
+```console
+npm i @cxe/sdk -g
+```
+or
 ```console
 curl https://raw.githubusercontent.com/cxe/sdk/master/cli --create-dirs -o ~/.cxe/cli && \
     chmod +x ~/.cxe/cli && \
