@@ -1,0 +1,8 @@
+{
+  "name": "@cxe/cms",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cxe/cms.git"
+  }
+}
